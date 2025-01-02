@@ -11,7 +11,6 @@ public class FluentValidationFilter<TMessage>(IValidator<TMessage>? validator, I
 
     public void Probe(ProbeContext context)
     {
-        Console.WriteLine("Probing FluentValidationFilter");
         context.CreateScope("FluentValidationFilter");
     }
     
@@ -21,7 +20,6 @@ public class FluentValidationFilter<TMessage>(IValidator<TMessage>? validator, I
     {
         if (validator is null)
         {
-            Console.WriteLine("Validator is null");
             await next.Send(context);
             return;
         }
@@ -31,7 +29,6 @@ public class FluentValidationFilter<TMessage>(IValidator<TMessage>? validator, I
 
         if (validationResult.IsValid)
         {
-            Console.WriteLine("Validation result is valid");
             await next.Send(context);
             return;
         }
@@ -39,7 +36,6 @@ public class FluentValidationFilter<TMessage>(IValidator<TMessage>? validator, I
         List<ValidationFailure>? validationProblems = validationResult.Errors;
 
         var failureContext = new ValidationFailureContext<TMessage>(context, validationProblems);
-        Console.WriteLine("Sending failure context");
         await _failurePipe.Send(failureContext);
     }
 }

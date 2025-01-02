@@ -33,12 +33,12 @@ namespace MassTransit.Extensions.FluentValidation.Tests
                 // Configure the in-memory bus
                 cfg.UsingInMemory((context, configurator) =>
                 {
-                    // This works
+                    // This works :
                     configurator.UseConsumeFilter(typeof(FluentValidationFilter<>), context);
 
                     configurator.ReceiveEndpoint(endpointConfigurator =>
                     {
-                        // The following does not work
+                        // The following does not work :
                         // endpointConfigurator.UseFluentValidationForMassTransit(context);
                         // endpointConfigurator.UseConsumeFilter(typeof(FluentValidationFilter<>), context);
                     });
