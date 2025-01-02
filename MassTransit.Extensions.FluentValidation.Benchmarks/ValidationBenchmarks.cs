@@ -8,13 +8,16 @@ using FluentValidation;
 using MassTransit.Extensions.FluentValidation;
 using MassTransit.Extensions.FluentValidation.Tests;
 
-[MemoryDiagnoser]
+[MinInvokeCount(1), InvocationCount(500)]
+[MinWarmupCount(5), MaxWarmupCount(200)]
+[MinIterationCount(10), MaxIterationCount(200)]
+[MinIterationTime(1000)] // Ensures each iteration runs for at least 100ms
 public class ValidationBenchmark
 {
-    private ITestHarness _harnessWithValidation;
-    private ITestHarness _harnessWithoutValidation;
-    private IServiceProvider _providerWithValidation;
-    private IServiceProvider _providerWithoutValidation;
+    private ITestHarness?     _harnessWithValidation;
+    private ITestHarness?     _harnessWithoutValidation;
+    private IServiceProvider? _providerWithValidation;
+    private IServiceProvider? _providerWithoutValidation;
 
     [GlobalSetup]
     public async Task Setup()
@@ -76,8 +79,11 @@ public class ValidationBenchmark
     [Benchmark]
     public async Task PublishMessageWithValidation()
     {
+        // allocate big memory to make sure GC is not triggered during the benchmark
+        var bigMemory = new byte[1024 * 1024 * 1024];
+
         var message = new TestMessage { IsValid = true };
-        await _harnessWithValidation.Bus.Publish(message);
+        await _harnessWithValidation!.Bus.Publish(message);
         await _harnessWithValidation.Consumed.Any<TestMessage>();
     }
 
@@ -85,7 +91,7 @@ public class ValidationBenchmark
     public async Task PublishMessageWithoutValidation()
     {
         var message = new TestMessage { IsValid = true };
-        await _harnessWithoutValidation.Bus.Publish(message);
+        await _harnessWithoutValidation!.Bus.Publish(message);
         await _harnessWithoutValidation.Consumed.Any<TestMessage>();
     }
 }
