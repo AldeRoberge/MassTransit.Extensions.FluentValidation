@@ -1,4 +1,6 @@
-﻿namespace MassTransit;
+﻿using MassTransit;
+
+namespace FluentValidationForMassTransit;
 
 public interface IValidationFailurePipe<TMessage> :
     IPipe<ValidationFailureContext<TMessage>>

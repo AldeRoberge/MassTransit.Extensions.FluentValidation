@@ -1,4 +1,4 @@
-﻿namespace FluentValidation.Results;
+﻿namespace FluentValidationForMassTransit;
 
 public static class ValidationFailureExtensions
 {

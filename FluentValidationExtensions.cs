@@ -1,4 +1,6 @@
-﻿namespace MassTransit;
+﻿using MassTransit;
+
+namespace FluentValidationForMassTransit;
 
 /// <summary>
 /// Extension methods for injecting functionality from the <see cref="FluentValidation"/> library into a <see cref="MassTransit"/> pipeline.
