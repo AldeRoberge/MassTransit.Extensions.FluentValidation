@@ -1,6 +1,6 @@
-﻿using MassTransit;
+﻿using System.Threading.Tasks;
 
-namespace FluentValidationForMassTransit;
+namespace MassTransit.Extensions.FluentValidation;
 
 public abstract class ValidationFailurePipeBase<TMessage> : IValidationFailurePipe<TMessage>
     where TMessage : class

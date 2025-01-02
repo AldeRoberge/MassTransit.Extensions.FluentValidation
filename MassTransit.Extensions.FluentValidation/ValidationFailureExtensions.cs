@@ -1,4 +1,7 @@
-﻿namespace FluentValidationForMassTransit;
+﻿using System.Collections.Generic;
+using System.Linq;
+
+namespace MassTransit.Extensions.FluentValidation;
 
 public static class ValidationFailureExtensions
 {
@@ -8,6 +11,6 @@ public static class ValidationFailureExtensions
                 .GroupBy(x => x.PropertyName)
                 .ToDictionary(
                     x => x.Key,
-                    x => x.Select(x => x.ErrorMessage).ToArray());
+                    x => x.Select(failure => failure.ErrorMessage).ToArray());
     }
 }

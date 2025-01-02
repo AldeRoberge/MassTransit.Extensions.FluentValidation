@@ -1,6 +1,8 @@
-﻿using MassTransit;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
-namespace FluentValidationForMassTransit;
+namespace MassTransit.Extensions.FluentValidation;
 
 public class FluentValidationFilter<TMessage>(IValidator<TMessage>? validator, IValidationFailurePipe<TMessage> failurePipe) : IFilter<ConsumeContext<TMessage>>
     where TMessage : class
@@ -9,6 +11,7 @@ public class FluentValidationFilter<TMessage>(IValidator<TMessage>? validator, I
 
     public void Probe(ProbeContext context)
     {
+        Console.WriteLine("Probing FluentValidationFilter");
         context.CreateScope("FluentValidationFilter");
     }
     
@@ -18,6 +21,7 @@ public class FluentValidationFilter<TMessage>(IValidator<TMessage>? validator, I
     {
         if (validator is null)
         {
+            Console.WriteLine("Validator is null");
             await next.Send(context);
             return;
         }
@@ -27,13 +31,15 @@ public class FluentValidationFilter<TMessage>(IValidator<TMessage>? validator, I
 
         if (validationResult.IsValid)
         {
+            Console.WriteLine("Validation result is valid");
             await next.Send(context);
             return;
         }
 
-        var validationProblems = validationResult.Errors.ToErrorDictionary();
+        List<ValidationFailure>? validationProblems = validationResult.Errors;
 
         var failureContext = new ValidationFailureContext<TMessage>(context, validationProblems);
+        Console.WriteLine("Sending failure context");
         await _failurePipe.Send(failureContext);
     }
 }
