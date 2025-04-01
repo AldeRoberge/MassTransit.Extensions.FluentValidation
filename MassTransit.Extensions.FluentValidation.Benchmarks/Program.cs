@@ -1,9 +1,11 @@
 ﻿using BenchmarkDotNet.Running;
 
-public class Program
+namespace MassTransit.Extensions.FluentValidation.Benchmarks;
+
+public abstract class Program
 {
-    public static void Main(string[] args)
+    public static void Main()
     {
-        var summary = BenchmarkRunner.Run<ValidationBenchmark>();
+        BenchmarkRunner.Run<ValidationBenchmark>();
     }
 }

@@ -1,4 +1,7 @@
-﻿namespace MassTransit.Extensions.FluentValidation;
+﻿using MassTransit.Extensions.FluentValidation.DefaultValidationFailurePipe;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace MassTransit.Extensions.FluentValidation;
 
 /// <summary>
 /// Extension methods for injecting functionality from the <see cref="FluentValidation"/> library into a <see cref="MassTransit"/> pipeline.
@@ -8,25 +11,18 @@ public static class FluentValidationExtensions
     /// <summary>
     /// Registers the necessary filters to perform validation on message sent through the pipeline.
     /// </summary>
-    /// <param name="configurator">A MassTransit endpoint configurator.</param>
-    /// <param name="context">The message handling context, implementing <see cref="IConfigurationServiceProvider"/>.</param>
-    /// <example>
-    /// services.AddMassTransit(busConfigurator =>
-    ///     {
-    ///         busConfigurator.AddConsumer<MyHandler>();
-    ///         busConfigurator.UsingRabbitMq((busContext, rabbitMQConfigurator) =>
-    ///         {
-    ///             rabbitMQConfigurator.ReceiveEndpoint(AssemblyName, endpointConfigurator =>
-    ///             {
-    ///                 endpointConfigurator.UseFluentValidationForMassTransit(busContext);
-    ///                 endpointConfigurator.ConfigureConsumer<MyHandler>(busContext);
-    ///             });
-    ///         });
-    ///     });
-    /// </example>
-    public static IEndpointConfigurator UseFluentValidationForMassTransit(this IEndpointConfigurator configurator, IBusRegistrationContext context)
+    public static IBusFactoryConfigurator UseFluentValidationForMassTransit(this IBusFactoryConfigurator configurator, IRegistrationContext context)
     {
         configurator.UseConsumeFilter(typeof(FluentValidationFilter<>), context);
         return configurator;
+    }
+
+    public static IServiceCollection AddDefaultMassTransitValidationFailurePipe(this IServiceCollection services)
+    {
+        // Registers a simple failure pipe that simply responds with ValidationFailure when the validation fails.
+        services.AddTransient(
+            typeof(IValidationFailurePipe<>),
+            typeof(TestValidationFailurePipe<>));
+        return services;
     }
 }

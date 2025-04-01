@@ -1,7 +1,6 @@
 ﻿using FluentValidation;
-using Shouldly;
 
-namespace MassTransit.Extensions.FluentValidation.Tests;
+namespace MassTransit.Extensions.FluentValidation.Tests.Models;
 
 public class TestMessageValidator : AbstractValidator<TestMessage>
 {
@@ -11,5 +10,9 @@ public class TestMessageValidator : AbstractValidator<TestMessage>
         RuleFor(x => x.IsValid)
             .Equal(true)
             .WithMessage($"The {nameof(TestMessage.IsValid)} value must be true.");
+
+        RuleFor(x => x.Message)
+            .NotEmpty()
+            .WithMessage($"The {nameof(TestMessage.Message)} value cannot be empty.");
     }
 }

@@ -1,6 +1,4 @@
-﻿using FluentValidation;
-using MassTransit.Testing;
-using Microsoft.Extensions.DependencyInjection;
+﻿using MassTransit.Extensions.FluentValidation.Tests.Models;
 using Shouldly;
 
 namespace MassTransit.Extensions.FluentValidation.Tests
@@ -8,91 +6,68 @@ namespace MassTransit.Extensions.FluentValidation.Tests
     /// <summary>
     /// A test class that demonstrates how to use the MassTransit test harness with the FluentValidation filter.
     /// </summary>
-    public class Tests
+    public class Tests : TestBase
     {
-        private ITestHarness?     _harness;
-        private IServiceProvider? _provider;
-
-        [SetUp]
-        public async Task Setup()
-        {
-            var services = new ServiceCollection();
-
-            services.AddTransient(
-                typeof(IValidationFailurePipe<>),
-                typeof(TestValidationFailurePipe<>));
-
-            // Register FluentValidation validators
-            services.AddValidatorsFromAssemblyContaining<TestMessageValidator>();
-
-            services.AddMassTransitTestHarness(cfg =>
-            {
-                // Register the consumer
-                cfg.AddConsumer<TestConsumer>();
-
-                // Configure the in-memory bus
-                cfg.UsingInMemory((context, configurator) =>
-                {
-                    // This works :
-                    configurator.UseConsumeFilter(typeof(FluentValidationFilter<>), context);
-
-                    configurator.ReceiveEndpoint(endpointConfigurator =>
-                    {
-                        // The following does not work :
-                        // endpointConfigurator.UseFluentValidationForMassTransit(context);
-                        // endpointConfigurator.UseConsumeFilter(typeof(FluentValidationFilter<>), context);
-                    });
-                    configurator.ConfigureEndpoints(context);
-                });
-            });
-
-
-            // Build the service provider
-            _provider = services.BuildServiceProvider(validateScopes: true);
-
-            // Retrieve the test harness
-            _harness = _provider.GetRequiredService<ITestHarness>();
-
-            // Start the harness
-            await _harness.Start();
-        }
-
-
         [Test]
-        public async Task Should_Validate_Message_Successfully()
+        public async Task Should_Consume_Message_Successfully()
         {
-            var message = new TestMessage { IsValid = true };
+            var message = new TestMessage
+            {
+                IsValid = true,
+                Message = "This message is valid and should be consumed.",
+            };
 
-            await _harness!.Bus.Publish(message);
+            await Harness.Bus.Publish(message);
 
             // Assert that the consumer consumed the message
-            (await _harness.Consumed.Any<TestMessage>()).ShouldBeTrue();
-            var consumerHarness = _harness.GetConsumerHarness<TestConsumer>();
+            (await Harness.Consumed.Any<TestMessage>()).ShouldBeTrue();
+            var consumerHarness = Harness.GetConsumerHarness<TestMessageConsumer>();
             (await consumerHarness.Consumed.Any<TestMessage>()).ShouldBeTrue();
         }
 
         [Test]
-        public async Task Should_Handle_Validation_Failure()
+        public async Task Should_Not_Consume_Invalid_Message()
         {
-            var message = new TestMessage { IsValid = false };
+            var message = new TestMessage
+            {
+                IsValid = false,
+                Message = "This message is not valid and should not be consumed.",
+            };
 
-            await _harness!.Bus.Publish(message);
+            await Harness.Bus.Publish(message);
 
             // Assert that the consumer did not consume the invalid message
-            var consumerHarness = _harness.GetConsumerHarness<TestConsumer>();
+            var consumerHarness = Harness.GetConsumerHarness<TestMessageConsumer>();
             (await consumerHarness.Consumed.Any<TestMessage>()).ShouldBeFalse();
-            (await _harness.Consumed.Any<TestMessage>()).ShouldBeTrue(); // Message reached the bus
+            (await Harness.Consumed.Any<TestMessage>()).ShouldBeTrue(); // Message reached the bus
         }
 
-
-        [TearDown]
-        public async Task TearDown()
+        [Test]
+        public async Task Should_Not_Consume_Invalid_Message_With_No_Message()
         {
-            if (_harness != null)
-                await _harness.Stop();
+            var message = new TestMessage
+            {
+                IsValid = true,
+                Message = string.Empty, // Invalid message
+            };
 
-            if (_provider is IAsyncDisposable disposable)
-                await disposable.DisposeAsync();
+            await Harness.Bus.Publish(message);
+
+            // Assert that the consumer did not consume the invalid message
+            var consumerHarness = Harness.GetConsumerHarness<TestMessageConsumer>();
+
+            (await consumerHarness.Consumed.Any<TestMessage>()).ShouldBeFalse();
+
+            // Assert that the message was not consumed by the consumer
+            (await Harness.Consumed.Any<TestMessage>()).ShouldBeTrue(); // Message reached the bus
+
+            // Assert that the message was not consumed by the consumer
+            var exception = consumerHarness.Consumed.Select<TestMessage>().FirstOrDefault();
+
+            exception.ShouldNotBeNull();
+            
+            // Get the response (ValidationFailure) from the consumer
+            
         }
     }
 }

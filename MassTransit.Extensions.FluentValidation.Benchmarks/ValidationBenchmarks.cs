@@ -1,12 +1,12 @@
 ﻿using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Running;
-using MassTransit;
+using FluentValidation;
+using MassTransit.Extensions.FluentValidation.DefaultValidationFailurePipe;
+using MassTransit.Extensions.FluentValidation.Tests;
+using MassTransit.Extensions.FluentValidation.Tests.Models;
 using MassTransit.Testing;
 using Microsoft.Extensions.DependencyInjection;
-using System.Threading.Tasks;
-using FluentValidation;
-using MassTransit.Extensions.FluentValidation;
-using MassTransit.Extensions.FluentValidation.Tests;
+
+namespace MassTransit.Extensions.FluentValidation.Benchmarks;
 
 [MinInvokeCount(1), InvocationCount(500)]
 [MinWarmupCount(5), MaxWarmupCount(200)]
@@ -44,7 +44,7 @@ public class ValidationBenchmark
 
         services.AddMassTransitTestHarness(cfg =>
         {
-            cfg.AddConsumer<TestConsumer>();
+            cfg.AddConsumer<TestMessageConsumer>();
 
             cfg.UsingInMemory((context, configurator) =>
             {
